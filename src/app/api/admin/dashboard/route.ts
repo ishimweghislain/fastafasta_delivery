@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken, getTokenFromHeaders } from '@/lib/auth'
 
+// Local enum types to match schema
+enum OrderStatus {
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
+  PREPARING = 'PREPARING',
+  DELIVERING = 'DELIVERING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
+}
+
 export async function GET(request: NextRequest) {
   try {
     const token = getTokenFromHeaders(request.headers) || 
@@ -53,14 +63,14 @@ export async function GET(request: NextRequest) {
       prisma.order.aggregate({
         where: { 
           restaurantId,
-          status: 'COMPLETED'
+          status: OrderStatus.COMPLETED
         },
         _sum: { totalAmount: true }
       }),
       prisma.order.count({
         where: { 
           restaurantId,
-          status: 'PENDING'
+          status: OrderStatus.PENDING
         }
       }),
       prisma.food.count({
