@@ -8,7 +8,7 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-0 opacity-30">
           <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-emerald-500/30 blur-3xl" />
           <div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-indigo-500/25 blur-3xl" />
-          <div className="absolute bottom-[-8rem] left-1/2 h-96 w-[40rem] -translate-x-1/2 rounded-full bg-fuchsia-500/15 blur-3xl" />
+          <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-160 rounded-full bg-fuchsia-500/15 blur-3xl" />
         </div>
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-16 md:grid-cols-2 md:py-20">
@@ -20,7 +20,7 @@ export default function Home() {
 
             <h1 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Order food that feels
-              <span className="bg-gradient-to-r from-emerald-300 via-white to-indigo-300 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-orange-500 to-red-600 bg-clip-text text-transparent">
                 {' '}premium
               </span>
               {' '}— delivered fast.
@@ -76,7 +76,7 @@ export default function Home() {
 
           <div className="relative animate-in fade-in slide-in-from-bottom-6 duration-700 md:delay-150">
             <div className="relative overflow-hidden rounded-3xl bg-white/5 ring-1 ring-white/10">
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 via-transparent to-indigo-500/10" />
+              <div className="absolute inset-0 bg-linear-to-tr from-emerald-500/10 via-transparent to-indigo-500/10" />
               <div className="grid grid-cols-2 gap-0">
                 <div className="p-6">
                   <div className="text-sm font-semibold text-white">Today’s vibe</div>

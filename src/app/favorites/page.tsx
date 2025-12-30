@@ -166,7 +166,7 @@ export default function FavoritesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRestaurants.map((restaurant) => (
                 <div key={restaurant.id} className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-sm transition hover:-translate-y-1 hover:bg-white/10 hover:shadow-xl">
-                  <div className="relative h-48 bg-gradient-to-tr from-emerald-500/15 via-white/5 to-indigo-500/15">
+                  <div className="bg-linear-to-tr from-orange-400/20 to-red-600/20">
                     <button
                       onClick={() => toggleFavorite(restaurant.id)}
                       className="absolute top-4 right-4 bg-white/10 backdrop-blur-sm p-2 rounded-full ring-1 ring-white/15 transition hover:bg-white/15"

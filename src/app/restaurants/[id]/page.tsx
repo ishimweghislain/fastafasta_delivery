@@ -224,7 +224,7 @@ export default function RestaurantDetailPage() {
       </header>
 
       {/* Restaurant Header */}
-      <div className="h-64 bg-gradient-to-r from-primary/20 to-secondary/20 relative">
+      <div className="bg-linear-to-r from-emerald-500 to-teal-600 relative">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="container mx-auto px-4 h-full flex items-end pb-8 relative">
           <div className="text-white">

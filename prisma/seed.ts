@@ -1,5 +1,37 @@
-import { PrismaClient, UserRole, OrderStatus, PaymentMethod, PaymentStatus, MessageSender } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client'
+import * as bcrypt from 'bcryptjs'
+
+// Local enum types to match schema
+enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  RESTAURANT_ADMIN = 'RESTAURANT_ADMIN'
+}
+
+enum OrderStatus {
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
+  PREPARING = 'PREPARING',
+  DELIVERING = 'DELIVERING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
+}
+
+enum PaymentMethod {
+  MOMO = 'MOMO',
+  PAYPAL = 'PAYPAL',
+  CARD = 'CARD'
+}
+
+enum PaymentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED'
+}
+
+enum MessageSender {
+  CUSTOMER = 'CUSTOMER',
+  RESTAURANT = 'RESTAURANT'
+}
 
 const prisma = new PrismaClient()
 
@@ -102,10 +134,10 @@ async function main() {
       },
     })
 
-    // Update Restaurant Admin with restaurantId
+    // Update Restaurant Admin with restaurant
     await prisma.user.update({
       where: { id: restaurantAdmin.id },
-      data: { restaurantId: restaurant.id },
+      data: { restaurant: { connect: { id: restaurant.id } } },
     })
 
     // Create Categories

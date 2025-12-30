@@ -15,11 +15,11 @@ export default function OrderConfirmationPage() {
       {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex shrink-0 items-center justify-between">
             <Link href="/" className="text-2xl font-bold text-primary">
               🍔 FastaFasta
             </Link>
-            <nav className="flex items-center space-x-6">
+            <nav className="flex shrink-0 items-center space-x-6">
               <Link href="/restaurants" className="text-foreground hover:text-primary">
                 Restaurants
               </Link>
@@ -54,8 +54,8 @@ export default function OrderConfirmationPage() {
           <div className="bg-card border rounded-lg p-6 mb-8 text-left">
             <h2 className="font-semibold text-lg mb-4">What happens next?</h2>
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="flex shrink-0 items-start space-x-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                   <span className="text-primary font-semibold text-sm">1</span>
                 </div>
                 <div>
@@ -63,8 +63,8 @@ export default function OrderConfirmationPage() {
                   <p className="text-sm text-muted-foreground">You'll receive an email confirmation shortly</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="flex shrink-0 items-start space-x-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                   <span className="text-primary font-semibold text-sm">2</span>
                 </div>
                 <div>
@@ -72,8 +72,8 @@ export default function OrderConfirmationPage() {
                   <p className="text-sm text-muted-foreground">The restaurant will review and accept your order</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="flex shrink-0 items-start space-x-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                   <span className="text-primary font-semibold text-sm">3</span>
                 </div>
                 <div>
@@ -81,8 +81,8 @@ export default function OrderConfirmationPage() {
                   <p className="text-sm text-muted-foreground">Your food will be prepared with fresh ingredients</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="flex shrink-0 items-start space-x-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                   <span className="text-primary font-semibold text-sm">4</span>
                 </div>
                 <div>

@@ -119,7 +119,7 @@ export default function RestaurantsPage() {
             {filteredRestaurants.map((restaurant) => (
               <Link key={restaurant.id} href={`/restaurants/${restaurant.id}`}>
                 <div className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-sm transition hover:-translate-y-1 hover:bg-white/10 hover:shadow-xl">
-                  <div className="relative h-48 bg-gradient-to-tr from-emerald-500/15 via-white/5 to-indigo-500/15">
+                  <div className="bg-linear-to-tr from-orange-400/20 to-red-600/20">
                     {restaurant.logo && (
                       <div className="absolute top-4 left-4 h-12 w-12 bg-white rounded-full p-2">
                         <img 
