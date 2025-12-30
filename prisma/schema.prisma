@@ -1,0 +1,251 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      UserRole @default(RESTAURANT_ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  restaurant Restaurant?
+  employees Employee[]
+
+  @@map("users")
+}
+
+model Restaurant {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String?
+  banner      String?
+  location    String
+  description String?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  admin      User?            @relation(fields: [adminId], references: [id])
+  adminId    String?          @unique
+  categories FoodCategory[]
+  foods      Food[]
+  orders     Order[]
+  chats      Chat[]
+  employees  Employee[]
+  payments   Payment[]
+  favorites  Favorite[]
+
+  @@map("restaurants")
+}
+
+model FoodCategory {
+  id           String   @id @default(cuid())
+  name         String
+  restaurantId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  foods      Food[]
+
+  @@unique([restaurantId, name])
+  @@map("food_categories")
+}
+
+model Food {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  price        Float
+  image        String?
+  available    Boolean  @default(true)
+  restaurantId String
+  categoryId   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  restaurant Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category  FoodCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("foods")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  customerName  String
+  customerEmail String?
+  customerPhone String?
+  totalAmount   Float
+  status        OrderStatus @default(PENDING)
+  notes         String?
+  restaurantId  String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items      OrderItem[]
+  payments   Payment[]
+  chat       Chat?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  foodId   String
+  quantity Int
+  price    Float
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  food  Food  @relation(fields: [foodId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model Payment {
+  id           String       @id @default(cuid())
+  orderId      String
+  restaurantId String
+  amount       Float
+  method       PaymentMethod
+  status       PaymentStatus @default(PENDING)
+  transactionId String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Chat {
+  id           String   @id @default(cuid())
+  orderId      String?  @unique
+  restaurantId String
+  customerName String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  order      Order?     @relation(fields: [orderId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  messages   Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id         String      @id @default(cuid())
+  chatId     String
+  sender     MessageSender
+  content    String
+  createdAt  DateTime    @default(now())
+
+  // Relations
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Employee {
+  id           String      @id @default(cuid())
+  name         String
+  email        String?
+  phone        String?
+  role         String
+  salary       Float
+  restaurantId String
+  userId       String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id])
+  salaries  Salary[]
+
+  @@map("employees")
+}
+
+model Salary {
+  id          String   @id @default(cuid())
+  employeeId  String
+  amount      Float
+  month       String
+  year        Int
+  paid        Boolean  @default(false)
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, month, year])
+  @@map("salaries")
+}
+
+model Favorite {
+  id           String   @id @default(cuid())
+  restaurantId String
+  customerName String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, customerName])
+  @@map("favorites")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  RESTAURANT_ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  MOMO
+  PAYPAL
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum MessageSender {
+  CUSTOMER
+  RESTAURANT
+}
