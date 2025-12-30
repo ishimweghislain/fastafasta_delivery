@@ -127,14 +127,9 @@ export default function AdminLogin() {
               </form>
 
               <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-zinc-300">
-                <div className="font-semibold text-white">Default accounts</div>
-                <div className="mt-2 grid gap-1">
-                  <div>Super Admin: <span className="text-white">danger</span> / <span className="text-white">12345</span></div>
-                  <div>Restaurant Admin: <span className="text-white">resto1</span> / <span className="text-white">12345</span></div>
-                  <div>Restaurant Admin: <span className="text-white">resto2</span> / <span className="text-white">12345</span></div>
-                </div>
+              
                 <div className="mt-2 text-xs text-zinc-400">
-                  Tip: these accounts will be auto-created in the database the first time you log in.
+                  Tip: Don't Share your credentials with anyone else !! It may lead to securtiy issues .
                 </div>
               </div>
 
