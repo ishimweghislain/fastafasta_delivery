@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { OrderInput } from '@/lib/validations'
 
+// Local enum types to match schema
+enum PaymentMethod {
+  MOMO = 'MOMO',
+  PAYPAL = 'PAYPAL',
+  CARD = 'CARD'
+}
+
+enum PaymentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED'
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -121,8 +134,8 @@ export async function POST(request: NextRequest) {
         orderId: order.id,
         restaurantId,
         amount: totalAmount,
-        method: body.paymentMethod || 'CARD',
-        status: 'PENDING',
+        method: (body.paymentMethod || 'CARD') as PaymentMethod,
+        status: PaymentStatus.PENDING,
         transactionId: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       }
     })
