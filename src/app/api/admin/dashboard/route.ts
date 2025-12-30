@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken, getTokenFromHeaders } from '@/lib/auth'
 
+// Force dynamic rendering - no static optimization
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Local enum types to match schema
 enum OrderStatus {
   PENDING = 'PENDING',

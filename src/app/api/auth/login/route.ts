@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword, verifyPassword, generateToken } from '@/lib/auth'
 import { LoginInput } from '@/lib/validations'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 type Role = 'SUPER_ADMIN' | 'RESTAURANT_ADMIN'
 
 type BootstrapAccount = {

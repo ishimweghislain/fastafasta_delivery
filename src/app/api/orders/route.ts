@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { OrderInput } from '@/lib/validations'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Local enum types to match schema
 enum PaymentMethod {
   MOMO = 'MOMO',
