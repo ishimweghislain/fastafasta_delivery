@@ -1,216 +1,150 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Search, Star, Clock, MapPin, Heart } from 'lucide-react'
+import { Trash2, ShoppingCart, ArrowLeft, Heart } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
-interface Restaurant {
-  id: string
-  name: string
-  location: string
-  description?: string
-  logo?: string
-  banner?: string
-  enabled: boolean
-  _count: {
-    foods: number
-  }
+interface Food {
+    id: string
+    name: string
+    description: string
+    price: number
+    image?: string
+    categoryId: string
 }
 
 export default function FavoritesPage() {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
-  const [favorites, setFavorites] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+    const [favorites, setFavorites] = useState<Food[]>([])
+    const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadFavorites()
-    fetchFavoriteRestaurants()
-  }, [])
+    useEffect(() => {
+        // Load favorites from local storage (ids) and then fetch details
+        // For simplicity in this demo, we'll store full objects in LS or fetch all foods and filter.
+        // Let's assume we store IDs in 'favoriteFoods'
+        const loadFavorites = async () => {
+            const favIds = JSON.parse(localStorage.getItem('favoriteFoods') || '[]')
 
-  const loadFavorites = () => {
-    const savedFavorites = localStorage.getItem('favorites')
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites))
-    }
-  }
+            if (favIds.length === 0) {
+                setFavorites([])
+                setLoading(false)
+                return
+            }
 
-  const fetchFavoriteRestaurants = async () => {
-    try {
-      const savedFavorites = localStorage.getItem('favorites')
-      if (savedFavorites) {
-        const favoriteIds = JSON.parse(savedFavorites)
-        
-        if (favoriteIds.length > 0) {
-          const response = await fetch('/api/restaurants')
-          if (response.ok) {
-            const allRestaurants = await response.json()
-            const favoriteRestaurants = allRestaurants.filter((restaurant: Restaurant) => 
-              favoriteIds.includes(restaurant.id)
-            )
-            setRestaurants(favoriteRestaurants)
-          }
+            // Fetch all foods or verify existence. 
+            // Since we don't have a bulk fetch by IDs endpoint efficiently yet without complex query,
+            // we'll try to fetch all foods from accessible categories.
+            // OPTIMIZATION: Just fetch from /api/foods logic on client side is hard without category.
+            // We will assume for now we storing full objects in LS for speed or just IDs and we can't show details easily.
+            // Let's change strategy: Store full object in LS for favorites to avoid n+1 requests.
+
+            // If we only have IDs, we might be stuck. 
+            // Let's rely on the user having stored full objects if they used the new menu.
+            // If not, we might need a new API endpoint.
+            // A simple implementation:
+
+            // Let's check for 'favoriteFoods' which contains objects.
+            const stored = localStorage.getItem('favoriteFoodsObjects')
+            if (stored) {
+                setFavorites(JSON.parse(stored))
+            }
+            setLoading(false)
         }
-      }
-    } catch (error) {
-      console.error('Error fetching favorite restaurants:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  const toggleFavorite = (restaurantId: string) => {
-    let newFavorites: string[]
-    if (favorites.includes(restaurantId)) {
-      newFavorites = favorites.filter(id => id !== restaurantId)
-    } else {
-      newFavorites = [...favorites, restaurantId]
-    }
-    setFavorites(newFavorites)
-    localStorage.setItem('favorites', JSON.stringify(newFavorites))
-    
-    // Update the restaurants list
-    if (newFavorites.includes(restaurantId)) {
-      // Add to favorites - need to fetch the restaurant
-      fetchRestaurantById(restaurantId)
-    } else {
-      // Remove from favorites
-      setRestaurants(restaurants.filter(r => r.id !== restaurantId))
-    }
-  }
+        loadFavorites()
+    }, [])
 
-  const fetchRestaurantById = async (restaurantId: string) => {
-    try {
-      const response = await fetch(`/api/restaurants/${restaurantId}`)
-      if (response.ok) {
-        const restaurant = await response.json()
-        setRestaurants(prev => [...prev, restaurant])
-      }
-    } catch (error) {
-      console.error('Error fetching restaurant:', error)
+    const removeFromFavorites = (id: string) => {
+        const updated = favorites.filter(f => f.id !== id)
+        setFavorites(updated)
+        localStorage.setItem('favoriteFoodsObjects', JSON.stringify(updated))
+        // Also update IDs list if we maintain it
+        const ids = updated.map(f => f.id)
+        localStorage.setItem('favoriteFoods', JSON.stringify(ids))
+        window.dispatchEvent(new Event('favorites-updated'))
     }
-  }
 
-  const filteredRestaurants = restaurants.filter(restaurant =>
-    restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    restaurant.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    const addToCart = (food: Food) => {
+        const currentCart = JSON.parse(localStorage.getItem('cart') || '[]')
+        const existingItem = currentCart.find((item: any) => item.foodId === food.id)
 
-  if (loading) {
+        if (existingItem) {
+            existingItem.quantity += 1
+        } else {
+            currentCart.push({
+                foodId: food.id,
+                quantity: 1,
+                // We might need price/name for display in cart if we don't fetch there
+                price: food.price,
+                name: food.name,
+                image: food.image
+            })
+        }
+
+        localStorage.setItem('cart', JSON.stringify(currentCart))
+        window.dispatchEvent(new Event('cart-updated'))
+        alert('Added to cart')
+    }
+
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
-        <div className="container mx-auto px-4 py-10">
-          <div className="animate-pulse">
-            <div className="h-8 bg-muted rounded w-1/3 mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="border rounded-lg overflow-hidden">
-                  <div className="h-48 bg-muted"></div>
-                  <div className="p-4">
-                    <div className="h-6 bg-muted rounded mb-2"></div>
-                    <div className="h-4 bg-muted rounded mb-2"></div>
-                    <div className="h-4 bg-muted rounded w-2/3"></div>
-                  </div>
+        <div className="min-h-screen bg-background text-foreground pb-20">
+            <div className="container mx-auto px-4 py-8">
+                <div className="flex items-center gap-4 mb-8">
+                    <Link href="/" className="p-2 hover:bg-muted rounded-full transition">
+                        <ArrowLeft className="h-6 w-6" />
+                    </Link>
+                    <h1 className="text-3xl font-bold">Your Favorites</h1>
                 </div>
-              ))}
+
+                {loading ? (
+                    <div className="text-center py-20">Loading...</div>
+                ) : favorites.length === 0 ? (
+                    <div className="text-center py-20 bg-muted/30 rounded-3xl">
+                        <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                        <h2 className="text-xl font-semibold mb-2">No favorites yet</h2>
+                        <p className="text-muted-foreground mb-6">Start exploring our menu to add some!</p>
+                        <Link href="/menu">
+                            <Button>Browse Menu</Button>
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {favorites.map((food) => (
+                            <div key={food.id} className="bg-card border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition group">
+                                {food.image && (
+                                    <div className="relative h-48 overflow-hidden">
+                                        <img src={food.image} alt={food.name} className="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
+                                    </div>
+                                )}
+                                <div className="p-5">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-lg">{food.name}</h3>
+                                        <span className="font-semibold text-primary">${food.price.toFixed(2)}</span>
+                                    </div>
+                                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{food.description}</p>
+
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                                            onClick={() => removeFromFavorites(food.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            className="flex-1"
+                                            onClick={() => addToCart(food)}
+                                        >
+                                            <ShoppingCart className="h-4 w-4 mr-2" /> Add to Cart
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
-          </div>
         </div>
-      </div>
     )
-  }
-
-  return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="container mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">Your Favorite Restaurants</h1>
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search favorites..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 pl-10 text-sm text-white placeholder:text-zinc-400 outline-none transition focus:border-white/20 focus:bg-white/10"
-            />
-          </div>
-        </div>
-
-        {filteredRestaurants.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 ring-1 ring-white/10">
-              <Heart className="h-12 w-12 text-zinc-300" />
-            </div>
-            <h2 className="text-2xl font-semibold mb-2">
-              {searchTerm ? 'No matching favorites found' : 'No favorite restaurants yet'}
-            </h2>
-            <p className="text-zinc-300 mb-6">
-              {searchTerm 
-                ? 'Try searching for something else or browse all restaurants.'
-                : 'Start adding restaurants to your favorites to see them here!'
-              }
-            </p>
-            <Link href="/restaurants" className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-zinc-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-              Browse Restaurants
-            </Link>
-          </div>
-        ) : (
-          <>
-            <div className="mb-6">
-              <p className="text-zinc-400">
-                {filteredRestaurants.length} favorite{filteredRestaurants.length !== 1 ? 's' : ''} found
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredRestaurants.map((restaurant) => (
-                <div key={restaurant.id} className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-sm transition hover:-translate-y-1 hover:bg-white/10 hover:shadow-xl">
-                  <div className="bg-linear-to-tr from-orange-400/20 to-red-600/20">
-                    <button
-                      onClick={() => toggleFavorite(restaurant.id)}
-                      className="absolute top-4 right-4 bg-white/10 backdrop-blur-sm p-2 rounded-full ring-1 ring-white/15 transition hover:bg-white/15"
-                    >
-                      <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2">{restaurant.name}</h3>
-                    <p className="text-zinc-300 text-sm mb-3 line-clamp-2">
-                      {restaurant.description || 'Delicious food waiting for you!'}
-                    </p>
-                    <div className="flex items-center text-sm text-zinc-400 mb-2">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {restaurant.location}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <span className="ml-1 text-sm">4.5</span>
-                      </div>
-                      <div className="flex items-center text-sm text-zinc-400">
-                        <Clock className="h-4 w-4 mr-1" />
-                        25-35 min
-                      </div>
-                      <div className="text-sm text-zinc-400">
-                        {restaurant._count.foods} items
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <Link 
-                        href={`/restaurants/${restaurant.id}`}
-                        className="w-full block text-center rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-                      >
-                        View Menu
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  )
 }

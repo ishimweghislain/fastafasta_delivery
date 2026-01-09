@@ -2,57 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken, getTokenFromHeaders } from '@/lib/auth'
 
-// Force dynamic rendering - no static optimization
+// Force dynamic rendering
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
-// Local enum types to match schema
-enum OrderStatus {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  PREPARING = 'PREPARING',
-  DELIVERING = 'DELIVERING',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
-}
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getTokenFromHeaders(request.headers) || 
-                  request.cookies.get('admin_token')?.value
+    const token = getTokenFromHeaders(request.headers) ||
+      request.cookies.get('admin_token')?.value
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'No token provided' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'No token provided' }, { status: 401 })
     }
 
-    const decoded = verifyToken(token)
+    const decoded = await verifyToken(token)
     if (!decoded) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: {
-        restaurant: true
-      }
-    })
-
-    const restaurantId = user?.restaurant?.id
-
-    if (!user || !restaurantId) {
-      return NextResponse.json(
-        { error: 'Restaurant not found' },
-        { status: 404 }
-      )
-    }
-
-    // Get dashboard stats
+    // Get dashboard stats (Global)
     const [
       totalOrders,
       totalRevenue,
@@ -61,36 +28,28 @@ export async function GET(request: NextRequest) {
       totalEmployees,
       recentOrders
     ] = await Promise.all([
-      prisma.order.count({
-        where: { restaurantId }
-      }),
+      prisma.order.count(),
       prisma.order.aggregate({
-        where: { 
-          restaurantId,
-          status: OrderStatus.COMPLETED
+        where: {
+          status: 'COMPLETED'
         },
         _sum: { totalAmount: true }
       }),
       prisma.order.count({
-        where: { 
-          restaurantId,
-          status: OrderStatus.PENDING
+        where: {
+          status: 'PENDING'
         }
       }),
-      prisma.food.count({
-        where: { restaurantId }
-      }),
-      prisma.employee.count({
-        where: { restaurantId }
-      }),
+      prisma.food.count(),
+      prisma.employee.count(),
       prisma.order.findMany({
-        where: { restaurantId },
         include: {
           items: {
             include: {
               food: true
             }
-          }
+          },
+          customer: true
         },
         orderBy: {
           createdAt: 'desc'
@@ -105,7 +64,10 @@ export async function GET(request: NextRequest) {
       pendingOrders,
       totalFoods,
       totalEmployees,
-      recentOrders
+      recentOrders: recentOrders.map(order => ({
+        ...order,
+        customerName: order.customer.name || order.customer.email || 'Unknown'
+      }))
     }
 
     return NextResponse.json(dashboardData)

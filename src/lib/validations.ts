@@ -3,14 +3,6 @@ export interface LoginInput {
   password: string
 }
 
-export interface RestaurantInput {
-  name: string
-  location: string
-  description?: string
-  logo?: string
-  banner?: string
-}
-
 export interface FoodCategoryInput {
   name: string
 }
@@ -22,18 +14,20 @@ export interface FoodInput {
   image?: string
   available?: boolean
   categoryId: string
+  prepTime?: number
 }
 
 export interface OrderInput {
   customerName: string
-  customerEmail?: string
-  customerPhone?: string
+  customerEmail: string
+  customerPhone: string
+  address?: string
   notes?: string
   items: {
     foodId: string
     quantity: number
   }[]
-  restaurantId: string
+  type?: 'DELIVERY' | 'PICKUP' | 'DINE_IN'
   paymentMethod?: string
 }
 
@@ -41,7 +35,7 @@ export interface EmployeeInput {
   name: string
   email?: string
   phone?: string
-  role: string
+  position: string
   salary: number
 }
 

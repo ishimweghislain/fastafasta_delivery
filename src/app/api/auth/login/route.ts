@@ -1,48 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, verifyPassword, generateToken } from '@/lib/auth'
-import { LoginInput } from '@/lib/validations'
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
-type Role = 'SUPER_ADMIN' | 'RESTAURANT_ADMIN'
-
-type BootstrapAccount = {
-  password: string
-  role: Role
-  restaurant?: { name: string; location: string; description?: string }
-}
-
-const BOOTSTRAP_ACCOUNTS: Record<string, BootstrapAccount> = {
-  danger: {
-    password: '12345',
-    role: 'SUPER_ADMIN'
-  },
-  resto1: {
-    password: '12345',
-    role: 'RESTAURANT_ADMIN',
-    restaurant: {
-      name: 'Burger Palace',
-      location: 'City Center',
-      description: 'Juicy burgers, crispy fries, and fast service.'
-    }
-  },
-  resto2: {
-    password: '12345',
-    role: 'RESTAURANT_ADMIN',
-    restaurant: {
-      name: 'Pizza Express',
-      location: 'Downtown',
-      description: 'Freshly baked pizzas, pasta, and more.'
-    }
-  }
-}
+import { verifyPassword, generateToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const body: LoginInput = await request.json()
+    const body = await request.json()
     const { username, password } = body
 
     if (!username || !password) {
@@ -52,91 +14,50 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { username },
-      include: {
-        restaurant: true
-      }
     })
 
-    if (!user) {
-      const bootstrap = BOOTSTRAP_ACCOUNTS[username]
-      if (bootstrap && password === bootstrap.password) {
-        const created = await prisma.user.create({
-          data: {
-            username,
-            password: await hashPassword(bootstrap.password),
-            role: bootstrap.role as any
-          }
-        })
-
-        if (bootstrap.restaurant) {
-          await prisma.restaurant.create({
-            data: {
-              name: bootstrap.restaurant.name,
-              location: bootstrap.restaurant.location,
-              description: bootstrap.restaurant.description,
-              adminId: created.id
-            }
-          })
-        }
-
-        user = await prisma.user.findUnique({
-          where: { id: created.id },
-          include: { restaurant: true }
-        })
-      }
-    }
-
-    if (!user) {
+    if (!user || !(await verifyPassword(password, user.password))) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       )
     }
 
-    const isValidPassword = await verifyPassword(password, user.password)
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      )
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const token = generateToken({
+    // Generate Token (await)
+    const token = await generateToken({
       userId: user.id,
       username: user.username,
       role: user.role,
-      restaurantId: user.restaurant?.id
     })
+
+    // Return user info (excluding password)
+    const { password: _, ...userWithoutPassword } = user
 
     const response = NextResponse.json({
-      message: 'Login successful',
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        restaurantId: user.restaurant?.id || null,
-        restaurant: user.restaurant
-      }
+      user: { ...userWithoutPassword }
     })
 
+    // Set cookie
     response.cookies.set('admin_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      path: '/'
     })
 
     return response
+
   } catch (error) {
     console.error('Login error:', error)
-
-    const isProd = process.env.NODE_ENV === 'production'
-    const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      isProd ? { error: 'Internal server error' } : { error: 'Internal server error', details: message },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
